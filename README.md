@@ -17,6 +17,8 @@ Built for Hackapalooza 2025
 
 ## Quick Start
 
+You'll first need to download this repository. Go [here to the main folder](https://github.com/zeldamazur-viz/spam-slayer), click the green "Code" button, and "Download Zip". Extract the folder and navigate to the source folder in a terminal (the source folder should have the Models and Services folders). Make sure you have installed Python on your machine, which you should be able to find in the Company Portal.
+
 1. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
