@@ -22,30 +22,27 @@ Built for Hackapalooza 2025
    pip install -r requirements.txt
    ```
 
-2. **Set up environment** (`.env`):
+2. **Set up environment**:
+   Create a file named `.env` based on the `.env.example` file. In `.env` replace these values with your real values. **These values are not shared or uploaded anywhere**. 
+
    ```
    SF_USERNAME=your_salesforce_username
    SF_PASSWORD=your_salesforce_password  
    SF_SECURITY_TOKEN=your_security_token
    ```
 
+   To get a salesforce security token if you don't have one, [see this page on the Salesforce Help Page.](https://help.salesforce.com/s/articleView?id=xcloud.user_security_token.htm&type=5)
+
 3. **Train the model**:
+   This only needs to be done once, technically. Run the file below:
+
    ```bash
-   python models/train_spam_model.py
+   python ./models/create_training_csv.py
    ```
+
+   It will create a CSV under the `./training-data` folder. Send us that CSV and we'll train the model!
 
 4. **Run spam detection**:
    ```bash
-   python services/spam_filter_service.py
+   python ./services/spam_filter_service.py
    ```
-
-## Training Data
-
-Expects `models/training_data.xlsx` with columns:
-- `SuppliedEmail`, `Subject`, `Description`, `is_spam` (boolean)
-
-## Configuration
-
-- Confidence threshold: 53% (configurable in `spam_filter_service.py`) (could be higher with more training data)
-- Processes tickets with status: New, Open
-- Auto-closes spam tickets with "Spam" reason

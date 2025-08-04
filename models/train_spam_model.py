@@ -10,44 +10,40 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 import os
-script_dir = os.path.dirname(os.path.abspath(__file__))
-xlsx_path = os.path.join(script_dir, 'training_data.xlsx')
-
-def load_training_data(xlsx_path='./models/training_data.xlsx'):
-    """Load training data from XLSX file"""
+def load_training_data(csv_path=None):
+    """Load training data from CSV file"""
+    if csv_path is None:
+        # Default path to training-data folder
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(script_dir, '..', 'training-data', 'training_data.csv')
+    
     try:
-        print(f"Loading training data from {xlsx_path}...")
-        df = pd.read_excel(xlsx_path)
-        
-        # Ensure required columns exist
-        required_cols = ['SuppliedEmail', 'Subject', 'Description', 'is_spam']
+        print(f"Loading training data from {csv_path}...")
+        df = pd.read_csv(csv_path)
+
+        required_cols = ['Subject', 'Description', 'is_spam']
         missing_cols = [col for col in required_cols if col not in df.columns]
         if missing_cols:
-            raise ValueError(f"XLSX must have columns: {required_cols}. Missing: {missing_cols}")
-        
-        # Preprocess the data
+            raise ValueError(f"CSV must have columns: {required_cols}. Missing: {missing_cols}")
+
         df = preprocess_data(df)
         
         return df
         
     except FileNotFoundError:
-        print(f"Training data file {xlsx_path} not found. Creating sample file...")
-        raise FileNotFoundError(f"Training data file {xlsx_path} not found")
+        print(f"Training data file {csv_path} not found.")
+        print("Run 'python models/get_training_data_from_salesforce.py' first to generate the CSV.")
+        raise FileNotFoundError(f"Training data file {csv_path} not found")
 
 def preprocess_data(df):
     """Combine text fields and convert labels"""
     print("Preprocessing data...")
-    
-    # Combine sender, subject, and body into single text field
+
     df['text'] = df['Subject'].fillna('') + ' ' + df['Description'].fillna('')
-    
-    # Convert boolean to string labels
     df['label'] = df['is_spam'].map({True: 'spam', False: 'legitimate'})
-    
-    # Clean up text (remove extra whitespace)
     df['text'] = df['text'].str.strip()
     
-    print(f"Combined text from sender + subject + body")
+    print(f"Combined text from subject + description")
     print(f"Converted {df['is_spam'].sum()} True values to 'spam'")
     print(f"Converted {(~df['is_spam']).sum()} False values to 'legitimate'")
     
@@ -56,7 +52,7 @@ def preprocess_data(df):
 def train_model():
     """Train the spam classification model"""
     print("Loading training data...")
-    df = load_training_data('./models/training_data.xlsx')
+    df = load_training_data()
     
     print(f"Training data: {len(df)} samples")
     print(f"Spam: {len(df[df['label'] == 'spam'])}")
@@ -73,7 +69,7 @@ def train_model():
         max_features=1000,
         stop_words='english',
         lowercase=True,
-        ngram_range=(1, 2)  # Use unigrams and bigrams
+        ngram_range=(1, 3)  # Use unigrams, bigrams, and trigrams
     )
     
     # Fit vectorizer on training data
@@ -81,7 +77,6 @@ def train_model():
     X_test_tfidf = vectorizer.transform(X_test)
     
     print("Training logistic regression model...")
-    # Train logistic regression
     model = LogisticRegression(random_state=42)
     model.fit(X_train_tfidf, y_train)
     
@@ -92,8 +87,7 @@ def train_model():
     print(f"\nModel accuracy: {accuracy:.2%}")
     print("\nClassification report:")
     print(classification_report(y_test, y_pred))
-    
-    # Save the model and vectorizer
+
     print("\nSaving model...")
     with open('./models/spam_model.pkl', 'wb') as f:
         pickle.dump(model, f)
