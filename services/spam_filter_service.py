@@ -78,6 +78,10 @@ class SpamFilterService:
     def classify_ticket_as_spam(self, subject, description):
         """Classify ticket using local ML model"""
         try:
+            # Pre-filter: Skip ML model if subject starts with "perdot" (case-insensitive)
+            if subject and subject.lower().startswith('perdot'):
+                return False, 1.0, "Pre-filtered: Subject starts with 'perdot'"
+            
             text = f"{subject} {description or ''}"
             
             text_tfidf = self.vectorizer.transform([text])
